@@ -1,0 +1,63 @@
+---
+- name: vmagent | set application facts
+  ansible.builtin.set_fact:
+    app_name: "vmagent"
+    app_image: "{{ vmagent_docker_version }}"
+    app_network: "{{ vmagent_docker_network_name }}"
+    app_base_path: "{{ vmagent_docker_base_path }}"
+    app_user: "{{ vmagent_docker_user }}"
+    app_uid: "{{ vmagent_docker_uid }}"
+    app_group: "{{ vmagent_docker_group }}"
+    app_gid: "{{ vmagent_docker_gid }}"
+    app_timezone: "{{ vmagent_docker_timezone }}"
+    app_environment_variables: "{{ vmagent_docker_environment_variables }}"
+    app_commands: "{{ vmagent_docker_commands }}"
+    app_volumes: "{{ vmagent_docker_volumes }}"
+    app_labels: "{{ vmagent_docker_labels }}"
+    app_ports: "{{ vmagent_docker_ports }}"
+
+- name: "vmagent | Ensure app folders exists"
+  ansible.builtin.file:
+    name: '{{ app_base_path }}/{{ app_name }}/{{ item }}'
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0770"
+    state: directory
+  with_items:
+    - "config"
+    - "data"
+
+- name: vmagent | get docker executable path
+  ansible.builtin.command:
+    cmd: "which docker"
+  changed_when: false
+  register: vmagent_docker_executable_path
+
+- name: "vmagent | create docker-compose.yml"
+  ansible.builtin.template:
+    src: "docker-compose.yml.j2"
+    dest: "{{ app_base_path }}/{{ app_name }}/docker-compose.yml"
+    mode: "0640"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+  notify: vmagent_restart
+
+- name: "vmagent | create prometheus.yml"
+  ansible.builtin.template:
+    src: "config.yml.j2"
+    dest: "{{ app_base_path }}/{{ app_name }}/config/prometheus.yml"
+    mode: "0640"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+  notify: vmagent_restart
+
+- name: "vmagent | Create systemd service"
+  ansible.builtin.template:
+    src: "systemd.service.j2"
+    dest: "/etc/systemd/system/{{ app_name }}.service"
+    mode: "0770"
+    owner: "root"
+    group: "root"
+  notify:
+    - vmagent_systemd_reload
+    - vmagent_restart

@@ -1,0 +1,56 @@
+---
+# General config
+vmagent_docker_network_name: "web"
+vmagent_docker_base_path: "/opt"
+vmagent_docker_timezone: "Europe/Berlin"
+
+# User/Group of the stack. Everything is mapped to this, instead of root.
+vmagent_docker_user: "homelab"
+vmagent_docker_uid: "900"
+vmagent_docker_group: "homelab"
+vmagent_docker_gid: "900"
+vmagent_docker_user_system: true
+
+# which container version to install
+# https://hub.docker.com/r/victoriametrics/vmagent/tags
+# can also be latest
+vmagent_docker_version: "victoriametrics/vmagent:latest"
+
+# https://docs.victoriametrics.com/vmagent/#advanced-usage
+vmagent_docker_commands:
+  - "--promscrape.config=/etc/prometheus/prometheus.yml"
+  - "--remoteWrite.url=http://victoriametrics:8428/api/v1/write"
+  - "--remoteWrite.tmpDataPath=/vmagentdata"
+
+vmagent_docker_environment_variables: []
+vmagent_docker_volumes:
+  - "{{ vmagent_docker_base_path }}/vmagent/data:/vmagentdata"
+  - "{{ vmagent_docker_base_path }}/vmagent/config/prometheus.yml:/etc/prometheus/prometheus.yml"
+
+# which port to expose. can be empty
+vmagent_docker_ports:
+  - "8429:8429"
+
+vmagent_docker_labels:
+  - "traefik.enable=false"
+# - "traefik.enable=true"
+# - "traefik.http.routers.vmagent.entryPoints=https"
+# - "traefik.http.routers.vmagent.rule=Host(`vmagent.example.com`)"
+# - "traefik.http.routers.vmagent.tls.certResolver=letsEncrypt"
+# - "traefik.http.routers.vmagent.tls=true"
+#  - "traefik.http.routers.vmagent.service=vmagent"
+#  - "traefik.http.routers.vmagent.loadbalancer.server.port=80"
+
+vmagent_docker_config:
+  global:
+    scrape_interval: 10s
+  scrape_configs:
+    - job_name: 'vmagent'
+      static_configs:
+        - targets: ['vmagent:8429']
+    - job_name: 'vmalert'
+      static_configs:
+        - targets: ['vmalert:8880']
+    - job_name: 'victoriametrics'
+      static_configs:
+        - targets: ['victoriametrics:8428']

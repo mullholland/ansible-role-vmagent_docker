@@ -1,0 +1,8 @@
+---
+#
+# Ansible managed
+#
+repository:
+  description: Installs and configures vmagent container based on official vmagent docker container
+  homepage: https://mullholland.net
+  topics: cloud, development, webserver, vmagent, proxy, ansible, molecule, tox, playbook

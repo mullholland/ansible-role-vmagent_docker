@@ -1,0 +1,10 @@
+---
+- name: vmagent_systemd_reload
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: vmagent_restart
+  ansible.builtin.service:
+    name: "vmagent"
+    state: restarted
+    enabled: true

@@ -1,0 +1,13 @@
+---
+- name: user | Ensure group exists
+  ansible.builtin.group:
+    name: "{{ vmagent_docker_group }}"
+    gid: "{{ vmagent_docker_gid }}"
+    state: present
+
+- name: user | Ensure user exists with gid
+  ansible.builtin.user:
+    name: "{{ vmagent_docker_user }}"
+    uid: "{{ vmagent_docker_uid }}"
+    system: "{{ vmagent_docker_user_system | default(omit) }}"
+    state: "present"
